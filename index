@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>🍄 皮克敏蘑菇計時器</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 24px;
+            padding: 32px 24px;
+            width: 100%;
+            max-width: 360px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            font-size: 24px;
+            margin: 0 0 8px 0;
+            color: #333;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 28px;
+        }
+        
+        .input-group {
+            margin-bottom: 24px;
+        }
+        
+        label {
+            display: block;
+            font-size: 14px;
+            color: #555;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .time-input {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        
+        input[type="number"] {
+            width: 100%;
+            padding: 16px;
+            font-size: 24px;
+            text-align: center;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        
+        input[type="number"]:focus {
+            border-color: #667eea;
+        }
+        
+        .time-unit {
+            font-size: 16px;
+            color: #666;
+            white-space: nowrap;
+        }
+        
+        .quick-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-top: 12px;
+        }
+        
+        .quick-btn {
+            padding: 12px 8px;
+            font-size: 14px;
+            border: none;
+            background: #f0f0f0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .quick-btn:active {
+            background: #667eea;
+            color: white;
+            transform: scale(0.95);
+        }
+        
+        .calculate-btn {
+            width: 100%;
+            padding: 18px;
+            font-size: 18px;
+            font-weight: 600;
+            color: white;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 8px;
+        }
+        
+        .calculate-btn:active {
+            transform: scale(0.98);
+        }
+        
+        .result {
+            margin-top: 28px;
+            padding: 24px;
+            background: #f8f9ff;
+            border-radius: 16px;
+            text-align: center;
+            display: none;
+        }
+        
+        .result.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .result-label {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 8px;
+        }
+        
+        .result-time {
+            font-size: 48px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 4px;
+        }
+        
+        .result-full {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+        
+        .alarm-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 16px 28px;
+            font-size: 18px;
+            font-weight: 600;
+            color: white;
+            background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+        }
+        
+        .alarm-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .button-row {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 8px;
+        }
+        
+        .copy-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 14px 24px;
+            font-size: 16px;
+            font-weight: 500;
+            color: #667eea;
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .copy-btn:active {
+            background: #667eea;
+            color: white;
+        }
+        
+        .tip {
+            margin-top: 24px;
+            padding: 16px;
+            background: #fff8e1;
+            border-radius: 12px;
+            font-size: 13px;
+            color: #795548;
+            line-height: 1.5;
+        }
+        
+        .tip-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .success-toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #333;
+            color: white;
+            padding: 14px 24px;
+            border-radius: 10px;
+            font-size: 14px;
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .success-toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🍄 蘑菇計時器</h1>
+        <div class="subtitle">計算下一個蘑菇出現時間</div>
+        
+        <div class="input-group">
+            <label>蘑菇剩餘時間</label>
+            <div class="time-input">
+                <input type="number" id="minutes" placeholder="55" min="0" max="120" inputmode="numeric">
+                <span class="time-unit">分鐘後結束</span>
+            </div>
+            <div class="quick-buttons">
+                <button class="quick-btn" onclick="setMinutes(15)">15分</button>
+                <button class="quick-btn" onclick="setMinutes(30)">30分</button>
+                <button class="quick-btn" onclick="setMinutes(45)">45分</button>
+                <button class="quick-btn" onclick="setMinutes(55)">55分</button>
+            </div>
+        </div>
+        
+        <button class="calculate-btn" onclick="calculate()">🔔 計算提醒時間</button>
+        
+        <div class="result" id="result">
+            <div class="result-label">建議在這個時間回來</div>
+            <div class="result-time" id="resultTime">--:--</div>
+            <div class="result-full" id="resultFull"></div>
+            <div class="button-row">
+                <a class="alarm-btn" id="alarmLink" href="#">
+                    ⏰ 直接設定鬧鐘
+                </a>
+                <button class="copy-btn" onclick="copyTime()">
+                    📋 複製時間
+                </button>
+            </div>
+        </div>
+        
+        <div class="tip">
+            <div class="tip-title">💡 計算邏輯</div>
+            現在時間 + 蘑菇剩餘時間 + 4分鐘<br>
+            （提早1分鐘準備，蘑菇結束後5分鐘出現新的）
+        </div>
+    </div>
+    
+    <div class="success-toast" id="toast">已複製時間！</div>
+
+    <script>
+        let calculatedTime = null;
+        let alarmHour = 0;
+        let alarmMinutes = 0;
+        
+        function setMinutes(min) {
+            document.getElementById('minutes').value = min;
+            calculate();
+        }
+        
+        function calculate() {
+            const minutes = parseInt(document.getElementById('minutes').value) || 0;
+            
+            // 現在時間 + 剩餘時間 + 4分鐘
+            const now = new Date();
+            calculatedTime = new Date(now.getTime() + (minutes + 4) * 60 * 1000);
+            
+            alarmHour = calculatedTime.getHours();
+            alarmMinutes = calculatedTime.getMinutes();
+            
+            const hours = alarmHour.toString().padStart(2, '0');
+            const mins = alarmMinutes.toString().padStart(2, '0');
+            
+            document.getElementById('resultTime').textContent = `${hours}:${mins}`;
+            document.getElementById('resultFull').textContent = 
+                `${calculatedTime.getMonth() + 1}/${calculatedTime.getDate()} ${hours}:${mins}`;
+            
+            // 設定 Android Intent URL 來直接開啟時鐘 app 設定鬧鐘
+            // 使用 Chrome Intent scheme
+            const alarmLink = document.getElementById('alarmLink');
+            
+            // Android intent:// URL 格式
+            // action: android.intent.action.SET_ALARM
+            // extras: hour (i. = integer), minutes, message (S. = string)
+            const intentUrl = `intent://#Intent;` +
+                `action=android.intent.action.SET_ALARM;` +
+                `i.android.intent.extra.alarm.HOUR=${alarmHour};` +
+                `i.android.intent.extra.alarm.MINUTES=${alarmMinutes};` +
+                `S.android.intent.extra.alarm.MESSAGE=${encodeURIComponent('🍄蘑菇時間')};` +
+                `end`;
+            
+            alarmLink.href = intentUrl;
+            
+            document.getElementById('result').classList.add('show');
+            
+            // 震動反饋（如果支援）
+            if (navigator.vibrate) {
+                navigator.vibrate(50);
+            }
+        }
+        
+        function copyTime() {
+            if (!calculatedTime) return;
+            
+            const hours = calculatedTime.getHours().toString().padStart(2, '0');
+            const mins = calculatedTime.getMinutes().toString().padStart(2, '0');
+            const text = `${hours}:${mins}`;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('已複製時間！');
+            });
+            
+            if (navigator.vibrate) {
+                navigator.vibrate(30);
+            }
+        }
+        
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2000);
+        }
+        
+        // 按 Enter 也可以計算
+        document.getElementById('minutes').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                calculate();
+            }
+        });
+        
+        // 頁面載入時自動 focus
+        document.getElementById('minutes').focus();
+    </script>
+</body>
+</html>
