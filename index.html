@@ -167,6 +167,7 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
+            width: 100%;
             padding: 16px 28px;
             font-size: 18px;
             font-weight: 600;
@@ -246,6 +247,16 @@
             transform: translateX(-50%) translateY(0);
             opacity: 1;
         }
+        
+        .time-display {
+            background: #e8f5e9;
+            border: 2px dashed #4CAF50;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 16px;
+            font-size: 14px;
+            color: #2E7D32;
+        }
     </style>
 </head>
 <body>
@@ -274,8 +285,11 @@
             <div class="result-time" id="resultTime">--:--</div>
             <div class="result-full" id="resultFull"></div>
             <div class="button-row">
+                <div class="time-display" id="timeDisplay">
+                    👆 請設定鬧鐘時間為 <strong id="alarmTimeText">--:--</strong>
+                </div>
                 <a class="alarm-btn" id="alarmLink" href="#">
-                    ⏰ 直接設定鬧鐘
+                    ⏰ 開啟時鐘 App
                 </a>
                 <button class="copy-btn" onclick="copyTime()">
                     📋 複製時間
@@ -318,22 +332,42 @@
             document.getElementById('resultTime').textContent = `${hours}:${mins}`;
             document.getElementById('resultFull').textContent = 
                 `${calculatedTime.getMonth() + 1}/${calculatedTime.getDate()} ${hours}:${mins}`;
+            document.getElementById('alarmTimeText').textContent = `${hours}:${mins}`;
             
-            // 設定 Android Intent URL 來直接開啟時鐘 app 設定鬧鐘
-            // 使用 Chrome Intent scheme
+            // 使用 Google Clock app 的 intent
+            // 這個方法會開啟時鐘 app 的鬧鐘頁面
             const alarmLink = document.getElementById('alarmLink');
             
-            // Android intent:// URL 格式
-            // action: android.intent.action.SET_ALARM
-            // extras: hour (i. = integer), minutes, message (S. = string)
-            const intentUrl = `intent://#Intent;` +
-                `action=android.intent.action.SET_ALARM;` +
-                `i.android.intent.extra.alarm.HOUR=${alarmHour};` +
-                `i.android.intent.extra.alarm.MINUTES=${alarmMinutes};` +
-                `S.android.intent.extra.alarm.MESSAGE=${encodeURIComponent('🍄蘑菇時間')};` +
-                `end`;
+            // 嘗試多種方式
+            // 方法1: 直接開啟 Google Clock app
+            alarmLink.href = `intent://alarm#Intent;scheme=android-app;package=com.google.android.deskclock;end`;
             
-            alarmLink.href = intentUrl;
+            alarmLink.onclick = function(e) {
+                e.preventDefault();
+                
+                // 先複製時間到剪貼簿
+                const timeText = `${hours}:${mins}`;
+                navigator.clipboard.writeText(timeText).then(() => {
+                    showToast('已複製 ' + timeText + '，正在開啟時鐘...');
+                }).catch(() => {});
+                
+                // 嘗試開啟時鐘 app
+                // 方法1: Google Clock 的 alarm intent
+                const clockIntent = `intent://#Intent;action=android.intent.action.SHOW_ALARMS;end`;
+                
+                // 方法2: 直接用 package 開啟
+                const clockPackage = `intent://#Intent;package=com.google.android.deskclock;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;end`;
+                
+                // 先嘗試 SHOW_ALARMS
+                window.location.href = clockIntent;
+                
+                // 如果沒反應，1秒後嘗試直接開 package
+                setTimeout(() => {
+                    if (document.hasFocus()) {
+                        window.location.href = clockPackage;
+                    }
+                }, 1000);
+            };
             
             document.getElementById('result').classList.add('show');
             
@@ -351,7 +385,7 @@
             const text = `${hours}:${mins}`;
             
             navigator.clipboard.writeText(text).then(() => {
-                showToast('已複製時間！');
+                showToast('已複製 ' + text + '！');
             });
             
             if (navigator.vibrate) {
